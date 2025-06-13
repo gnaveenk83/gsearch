@@ -1,0 +1,83 @@
+src/main/resources/rules/
+├── common.dsl
+├── invoice.dsl
+├── invoice.dslr
+├── order.dsl
+├── order.dslr
+
+
+package com.example.dslr;
+
+import org.drools.compiler.compiler.DSLTokenizedMappingFile;
+import org.drools.compiler.lang.dsl.DefaultExpander;
+
+import java.io.*;
+import java.nio.file.*;
+
+public class DSLRExpander {
+
+    public static void generateAll() throws Exception {
+        Path rulesDir = Paths.get("src/main/resources/rules");
+        Path outputDir = Paths.get("target/generated-rules");
+        Path commonDslPath = rulesDir.resolve("common.dsl");
+
+        if (!Files.exists(commonDslPath)) {
+            System.err.println("❌ common.dsl not found in: " + commonDslPath.toAbsolutePath());
+            return;
+        }
+
+        DSLTokenizedMappingFile commonMapping = new DSLTokenizedMappingFile();
+        commonMapping.parseAndLoad(Files.newBufferedReader(commonDslPath));
+
+        Files.createDirectories(outputDir);
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(rulesDir, "*.dslr")) {
+            for (Path dslrFile : stream) {
+                String baseName = dslrFile.getFileName().toString().replaceFirst("\\.dslr$", "");
+                Path specificDsl = rulesDir.resolve(baseName + ".dsl");
+
+                if (!Files.exists(specificDsl)) {
+                    System.err.println("⚠ DSL file not found for: " + baseName + ".dsl");
+                    continue;
+                }
+
+                // Load both: common + specific DSL
+                DSLTokenizedMappingFile dslMapping = new DSLTokenizedMappingFile();
+                dslMapping.parseAndLoad(Files.newBufferedReader(specificDsl));
+                dslMapping.getMapping().addAll(commonMapping.getMapping());  // merge
+
+                DefaultExpander expander = new DefaultExpander();
+                expander.addDSLMapping(dslMapping.getMapping());
+
+                String drl = expander.expand(Files.newBufferedReader(dslrFile));
+                Path outputFile = outputDir.resolve(baseName + ".drl");
+                Files.writeString(outputFile, drl);
+
+                System.out.println("✔ Generated: " + outputFile);
+            }
+        }
+    }
+}
+
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>exec-maven-plugin</artifactId>
+      <version>3.1.0</version>
+      <executions>
+        <execution>
+          <id>generate-drls</id>
+          <phase>generate-sources</phase>
+          <goals>
+            <goal>java</goal>
+          </goals>
+          <configuration>
+            <mainClass>com.example.dslr.DSLRExpander</mainClass>
+            <method>generateAll</method>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
