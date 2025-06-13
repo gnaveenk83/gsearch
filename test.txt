@@ -6,58 +6,36 @@ src/main/resources/rules/
 ├── order.dslr
 
 
-package com.example.dslr;
+ // Iterate subdirectories (invoice, order, etc.)
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(baseRulesDir, Files::isDirectory)) {
+            for (Path subDir : stream) {
+                if (subDir.getFileName().toString().equals("shared")) continue;
 
-import org.drools.compiler.compiler.DSLTokenizedMappingFile;
-import org.drools.compiler.lang.dsl.DefaultExpander;
+                String name = subDir.getFileName().toString();
+                Path dslFile = subDir.resolve(name + ".dsl");
+                Path dslrFile = subDir.resolve(name + ".dslr");
 
-import java.io.*;
-import java.nio.file.*;
-
-public class DSLRExpander {
-
-    public static void generateAll() throws Exception {
-        Path rulesDir = Paths.get("src/main/resources/rules");
-        Path outputDir = Paths.get("target/generated-rules");
-        Path commonDslPath = rulesDir.resolve("common.dsl");
-
-        if (!Files.exists(commonDslPath)) {
-            System.err.println("❌ common.dsl not found in: " + commonDslPath.toAbsolutePath());
-            return;
-        }
-
-        DSLTokenizedMappingFile commonMapping = new DSLTokenizedMappingFile();
-        commonMapping.parseAndLoad(Files.newBufferedReader(commonDslPath));
-
-        Files.createDirectories(outputDir);
-
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(rulesDir, "*.dslr")) {
-            for (Path dslrFile : stream) {
-                String baseName = dslrFile.getFileName().toString().replaceFirst("\\.dslr$", "");
-                Path specificDsl = rulesDir.resolve(baseName + ".dsl");
-
-                if (!Files.exists(specificDsl)) {
-                    System.err.println("⚠ DSL file not found for: " + baseName + ".dsl");
+                if (!Files.exists(dslFile) || !Files.exists(dslrFile)) {
+                    System.out.println("⚠ Skipping " + name + " — DSL/DSLR file missing.");
                     continue;
                 }
 
-                // Load both: common + specific DSL
-                DSLTokenizedMappingFile dslMapping = new DSLTokenizedMappingFile();
-                dslMapping.parseAndLoad(Files.newBufferedReader(specificDsl));
-                dslMapping.getMapping().addAll(commonMapping.getMapping());  // merge
+                DSLTokenizedMappingFile combinedMapping = new DSLTokenizedMappingFile();
+                combinedMapping.parseAndLoad(Files.newBufferedReader(dslFile));
+                combinedMapping.getMapping().addAll(commonMapping.getMapping());
 
                 DefaultExpander expander = new DefaultExpander();
-                expander.addDSLMapping(dslMapping.getMapping());
+                expander.addDSLMapping(combinedMapping.getMapping());
 
                 String drl = expander.expand(Files.newBufferedReader(dslrFile));
-                Path outputFile = outputDir.resolve(baseName + ".drl");
-                Files.writeString(outputFile, drl);
 
-                System.out.println("✔ Generated: " + outputFile);
+                Path outputDir = outputBaseDir.resolve(name);
+                Files.createDirectories(outputDir);
+                Files.writeString(outputDir.resolve(name + ".drl"), drl);
+
+                System.out.println("✔ Generated: " + outputDir.resolve(name + ".drl"));
             }
         }
-    }
-}
 
 <build>
   <plugins>
