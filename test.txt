@@ -22,3 +22,8 @@ EXPOSE 8080
 # Entrypoint for WireMock
 ENTRYPOINT ["java", "-jar", "/wiremock.jar"]
 CMD ["--verbose", "--global-response-templating"]
+
+
+# Replace blocked Ubuntu security/archive URLs with open mirrors
+RUN sed -i 's|http://security.ubuntu.com/ubuntu|http://mirror.ubuntu.com/ubuntu|g' /etc/apt/sources.list && \
+    sed -i 's|http://archive.ubuntu.com/ubuntu|http://mirror.ubuntu.com/ubuntu|g' /etc/apt/sources.list
