@@ -27,3 +27,8 @@ CMD ["--verbose", "--global-response-templating"]
 # Replace blocked Ubuntu security/archive URLs with open mirrors
 RUN sed -i 's|http://security.ubuntu.com/ubuntu|http://mirror.ubuntu.com/ubuntu|g' /etc/apt/sources.list && \
     sed -i 's|http://archive.ubuntu.com/ubuntu|http://mirror.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+
+
+# 🛠 Patch blocked Ubuntu URLs
+RUN sed -i 's|security.ubuntu.com|mirror.ubuntu.com|g' /etc/apt/sources.list && \
+    sed -i 's|archive.ubuntu.com|mirror.ubuntu.com|g' /etc/apt/sources.list
