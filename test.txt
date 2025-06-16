@@ -84,3 +84,28 @@ docker run --rm ubuntu:jammy bash -c "apt-get update"
 
 docker run --rm ubuntu:jammy bash -c "apt-get update && apt-get install -y dnsutils && nslookup archive.ubuntu.com"
 docker run --rm ubuntu:jammy bash -c "apt-get update && apt-get install -y curl && curl -I http://archive.ubuntu.com"
+
+# docker_auth.py
+
+import os
+import subprocess
+
+def docker_login(username: str, token: str, registry: str, config_path: str = "/tmp/my-docker-config"):
+    os.environ["DOCKER_CONFIG"] = config_path
+    os.makedirs(config_path, exist_ok=True)
+
+    login_cmd = f"echo '{token}' | docker login {registry} --username {username} --password-stdin"
+    subprocess.run(login_cmd, shell=True, check=True)
+    print("✅ Docker login successful")
+
+from docker_auth import docker_login
+
+# Use the helper
+docker_login(
+    username="naveen",
+    token="your_api_token",
+    registry="artifactory.mycompany.com"
+)
+
+# Continue with the rest of your logic
+print("▶ Now doing docker build / push / other tasks...")
