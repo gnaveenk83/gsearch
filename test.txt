@@ -1,60 +1,24 @@
-src/main/resources/rules/
-├── common.dsl
-├── invoice.dsl
-├── invoice.dslr
-├── order.dsl
-├── order.dslr
+# Use official Java 17 (Temurin) LTS base image with Ubuntu Jammy
+FROM eclipse-temurin:17-jammy
 
+# Install required CLI tools
+RUN apt-get update && \
+    apt-get install -y curl zip unzip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
- // Process each *.dslr in this folder
-                try (DirectoryStream<Path> files = Files.newDirectoryStream(folder, "*.dslr")) {
-                    for (Path dslrFile : files) {
-                        String baseName = dslrFile.getFileName().toString().replaceFirst("\\.dslr$", "");
-                        Path dslFile = folder.resolve(baseName + ".dsl");
+# Set WireMock version
+ENV WIREMOCK_VERSION=2.33.2
 
-                        if (!Files.exists(dslFile)) {
-                            System.out.println("⚠ No DSL file for: " + dslrFile);
-                            continue;
-                        }
+# Download the standalone WireMock JAR
+RUN curl -L "https://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-jre8-standalone/${WIREMOCK_VERSION}/wiremock-jre8-standalone-${WIREMOCK_VERSION}.jar" \
+    -o /wiremock.jar
 
-                        // Merge DSLs
-                        DSLTokenizedMappingFile mergedMapping = new DSLTokenizedMappingFile();
-                        mergedMapping.parseAndLoad(Files.newBufferedReader(dslFile));
-                        mergedMapping.getMapping().addAll(commonMapping.getMapping());
+# Optional: expose stub folders for mappings & __files
+VOLUME ["/home/wiremock/mappings", "/home/wiremock/__files"]
 
-                        DefaultExpander expander = new DefaultExpander();
-                        expander.addDSLMapping(mergedMapping.getMapping());
+# Expose WireMock's default HTTP port
+EXPOSE 8080
 
-                        String drl = expander.expand(Files.newBufferedReader(dslrFile));
-
-                        Path outputDir = outputBaseDir.resolve(folder.getFileName());
-                        Files.createDirectories(outputDir);
-                        Path outputFile = outputDir.resolve(baseName + ".drl");
-                        Files.writeString(outputFile, drl);
-
-                        System.out.println("✔ DRL generated: " + outputFile);
-                    }
-                }
-
-<build>
-  <plugins>
-    <plugin>
-      <groupId>org.codehaus.mojo</groupId>
-      <artifactId>exec-maven-plugin</artifactId>
-      <version>3.1.0</version>
-      <executions>
-        <execution>
-          <id>generate-drls</id>
-          <phase>generate-sources</phase>
-          <goals>
-            <goal>java</goal>
-          </goals>
-          <configuration>
-            <mainClass>com.example.dslr.DSLRExpander</mainClass>
-            <method>generateAll</method>
-          </configuration>
-        </execution>
-      </executions>
-    </plugin>
-  </plugins>
-</build>
+# Entrypoint for WireMock
+ENTRYPOINT ["java", "-jar", "/wiremock.jar"]
+CMD ["--verbose", "--global-response-templating"]
