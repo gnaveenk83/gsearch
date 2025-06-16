@@ -35,6 +35,11 @@ RUN sed -i 's|security.ubuntu.com|mirror.ubuntu.com|g' /etc/apt/sources.list && 
 
 FROM debian:bullseye-slim
 
+docker run --rm ubuntu:jammy bash -c "apt-get update && apt-get install -y dnsutils && nslookup archive.ubuntu.com"
+
+
+docker run --rm ubuntu:jammy bash -c "apt-get update"
+
 sudo mkdir -p /etc/systemd/system/docker.service.d
 
 sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf <<EOF
@@ -72,3 +77,10 @@ EOF
 sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
 sudo systemctl restart docker
+docker run --rm --network=host ubuntu:jammy bash -c "apt-get update"
+
+docker run --rm --dns=8.8.8.8 ubuntu:jammy bash -c "apt-get update"
+docker run --rm ubuntu:jammy bash -c "apt-get update"
+
+docker run --rm ubuntu:jammy bash -c "apt-get update && apt-get install -y dnsutils && nslookup archive.ubuntu.com"
+docker run --rm ubuntu:jammy bash -c "apt-get update && apt-get install -y curl && curl -I http://archive.ubuntu.com"
