@@ -18,6 +18,21 @@ DroolsDSL.tmLanguage.json
   ]
 }
 
+{
+  "name": "drools-dsl",
+  "contributes": {
+    "grammars": [
+      {
+        "language": "droolsdsl",
+        "scopeName": "source.droolsdsl",
+        "path": "./DroolsDSL.tmLanguage.json"
+      }
+    ]
+  }
+}
+
+
+
 3. Map Colors to Scopes
 	•	IntelliJ will apply colors based on scope names like keyword.control.when.dsl, string.expression.dsl.
 	•	To change colors:
