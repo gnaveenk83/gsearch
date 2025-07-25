@@ -1,21 +1,32 @@
 DroolsDSL.tmLanguage.json
 {
-  "name": "drools.dsl",
-  "fileTypes": ["dsl"],
+  "scopeName": "source.droolsdsl",
+  "name": "Drools DSL",
   "patterns": [
     {
-      "match": "\\[when\\]",
-      "name": "keyword.control.when.dsl"
-    },
-    {
-      "match": "\\[then\\]",
-      "name": "keyword.control.then.dsl"
-    },
-    {
-      "match": "(?<=\\=).*",
-      "name": "string.expression.dsl"
+      "include": "#keywords"
     }
-  ]
+  ],
+  "repository": {
+    "keywords": {
+      "patterns": [
+        {
+          "match": "\\[when\\]",
+          "name": "keyword.control.when.dsl"
+        },
+        {
+          "match": "\\[then\\]",
+          "name": "keyword.control.then.dsl"
+        },
+        {
+          "match": "(?<=\\=).*",
+          "name": "string.expression.dsl"
+        }
+      ]
+    }
+  },
+  "fileTypes": ["dsl"],
+  "uuid": "12345678-90ab-cdef-1234-567890abcdef"
 }
 
 {
