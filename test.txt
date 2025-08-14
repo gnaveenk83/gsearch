@@ -1,0 +1,106 @@
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>jaxb2-maven-plugin</artifactId>
+      <version>3.1.0</version>
+      <executions>
+        <execution>
+          <id>generate-xjc</id>
+          <phase>generate-sources</phase> <!-- runs before compile -->
+          <goals>
+            <goal>xjc</goal>
+          </goals>
+          <configuration>
+            <!-- XSDs (directory with includes; or list files explicitly if you prefer) -->
+            <sources>
+              <source>
+                <directory>${project.basedir}/src/main/resources/xsd</directory>
+                <includes>
+                  <include>**/*.xsd</include>
+                </includes>
+              </source>
+            </sources>
+
+            <!-- .xjb bindings -->
+            <xjbSources>
+              <xjbSource>
+                <directory>${project.basedir}/src/main/resources/bindings</directory>
+                <includes>
+                  <include>**/*.xjb</include>
+                </includes>
+              </xjbSource>
+            </xjbSources>
+
+            <!-- Output INSIDE target so Maven/IDE handle it automatically -->
+            <outputDirectory>${project.build.directory}/generated-sources/xjc</outputDirectory>
+
+            <!-- Housekeeping -->
+            <clearOutputDir>true</clearOutputDir>
+            <verbose>true</verbose>
+
+            <!-- Pick ONE of these based on your .xjb namespace -->
+            <!-- <specVersion>2.3</specVersion> -->   <!-- for javax bindings -->
+            <specVersion>3.0</specVersion>           <!-- for jakarta bindings -->
+
+            <!-- Allow external schema/D TD access (prevents SAX access errors) -->
+            <systemProperties>
+              <property>
+                <name>javax.xml.accessExternalSchema</name>
+                <value>file,http,https</value>
+              </property>
+              <property>
+                <name>javax.xml.accessExternalDTD</name>
+                <value>file,http,https</value>
+              </property>
+            </systemProperties>
+
+            <!-- Optional: if you fully trust schemas and hit secure-processing blocks -->
+            <!--
+            <args>
+              <arg>-disableXmlSecurity</arg>
+            </args>
+            -->
+          </configuration>
+        </execution>
+      </executions>
+
+      <!-- If you need specific XJC runtime/tooling versions, add them here -->
+      <!--
+      <dependencies>
+        <dependency>
+          <groupId>com.sun.xml.bind</groupId>
+          <artifactId>jaxb-xjc</artifactId>
+          <version>4.0.5</version>
+        </dependency>
+        <dependency>
+          <groupId>com.sun.xml.bind</groupId>
+          <artifactId>jaxb-impl</artifactId>
+          <version>4.0.5</version>
+        </dependency>
+      </dependencies>
+      -->
+    </plugin>
+
+    <!-- Make generated dir part of compile classpath & visible to IntelliJ -->
+    <plugin>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>build-helper-maven-plugin</artifactId>
+      <version>3.5.0</version>
+      <executions>
+        <execution>
+          <id>add-generated-sources</id>
+          <phase>generate-sources</phase>
+          <goals>
+            <goal>add-source</goal>
+          </goals>
+          <configuration>
+            <sources>
+              <source>${project.build.directory}/generated-sources/xjc</source>
+            </sources>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
