@@ -1,1 +1,32 @@
 
+<plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-toolchains-plugin</artifactId>
+            <version>3.2.0</version>
+            <executions>
+                <execution>
+                    <phase>initialize</phase>
+                    <goals>
+                        <goal>toolchain</goal>
+                    </goals>
+                    <configuration>
+                        <toolchains>
+                            <jdk>
+                                <version>[17,)</version>
+                                <provides>
+                                    <id>jdk</id>
+                                </provides>
+                                <configuration>
+                                    <jdkHome>${JAVA_HOME}</jdkHome>
+                                    <options>
+                                        <option>-Djdk.xml.maxOccurLimit=1000000</option>
+                                        <option>-Djavax.xml.accessExternalSchema=file,http,https</option>
+                                        <option>-Djavax.xml.accessExternalDTD=file,http,https</option>
+                                    </options>
+                                </configuration>
+                            </jdk>
+                        </toolchains>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
